@@ -8,6 +8,19 @@ const initialFrameCount = 24;
 const scrollSteps = 5;
 const frames = new Array(frameCount);
 const blockingOptions = { passive: false };
+const loader = document.querySelector('.site-loader');
+const loaderPercent = document.querySelector('[data-loader-percent]');
+const loaderProgress = document.querySelector('.site-loader-progress i');
+const loaderCount = document.querySelector('[data-loader-count]');
+const loaderStage = document.querySelector('[data-loader-stage]');
+const terminalTitle = document.querySelector('[data-terminal-title]');
+const terminalLines = document.querySelector('[data-terminal-lines]');
+const terminalStatus = document.querySelector('[data-terminal-status]');
+const terminalMeter = document.querySelector('[data-terminal-meter]');
+const terminalReveal = document.querySelector('[data-terminal-reveal]');
+const introSkip = document.querySelector('[data-intro-skip]');
+const loadedInitialFrames = new Set();
+const loaderStartedAt = performance.now();
 let currentFrame = 0;
 let targetFrame = 0;
 let nextFrameToLoad = 0;
@@ -19,6 +32,78 @@ let wheelGestureTimer;
 let touchStartY = 0;
 let touchStepTriggered = false;
 let isHeroReleased = false;
+let isLoaderComplete = false;
+let introTimer;
+let hasIntroStarted = false;
+
+function completeLoader() {
+  if (isLoaderComplete) return;
+
+  isLoaderComplete = true;
+  loader?.classList.add('is-complete');
+  body.classList.remove('is-loading');
+  try {
+    window.sessionStorage.setItem('portfolio-intro-seen', 'true');
+  } catch {}
+  window.clearTimeout(introTimer);
+  window.setTimeout(() => {
+    if (loader) loader.hidden = true;
+  }, 700);
+}
+
+function addTerminalLine(text, tone = '') {
+  if (!terminalLines) return;
+  const line = document.createElement('p');
+  line.className = tone;
+  line.textContent = `> ${text}`;
+  terminalLines.append(line);
+}
+
+function setTerminalState(title, status, meter, tone = '') {
+  if (terminalTitle) terminalTitle.innerHTML = `${title}<span class="terminal-cursor">_</span>`;
+  if (terminalStatus) {
+    terminalStatus.textContent = status;
+    terminalStatus.className = `terminal-status ${tone}`;
+  }
+  if (terminalMeter) terminalMeter.style.transform = `scaleX(${meter})`;
+}
+
+function startSimulatedIntro() {
+  if (hasIntroStarted) return;
+  hasIntroStarted = true;
+
+  const sequence = [
+      [0, () => { setTerminalState('SYSTEM INITIALIZATION', 'Preparing digital environment', .08); addTerminalLine('./initialize_connection'); }],
+      [500, () => addTerminalLine('connecting...')],
+      [950, () => addTerminalLine('./search_available_nodes')],
+      [1400, () => { setTerminalState('INTRUSION DETECTED', 'REMOTE CONNECTION FOUND', .24, 'is-warning'); addTerminalLine('REMOTE CONNECTION FOUND', 'is-warning'); }],
+      [1950, () => { setTerminalState('AUTHENTICATION BYPASS ATTEMPT', 'BYPASS PROGRESS / 82%', .82, 'is-warning'); addTerminalLine('./bypass_authentication'); }],
+      [2250, () => addTerminalLine('[████████████████░░░░] 82%', 'is-warning')],
+      [2650, () => { setTerminalState('ACCESS GRANTED', 'BYPASS COMPLETE / 100%', 1, 'is-cyan'); addTerminalLine('authentication bypassed', 'is-cyan'); }],
+      [2950, () => addTerminalLine('[████████████████████] 100%', 'is-cyan')],
+      [3300, () => addTerminalLine('./access_system')],
+      [3650, () => addTerminalLine('root access granted', 'is-cyan')],
+      [4000, () => addTerminalLine('./override_interface')],
+      [4350, () => addTerminalLine('interface override successful', 'is-cyan')],
+      [4850, () => setTerminalState('ACCESS GRANTED', 'BYPASS COMPLETE / 100%', 1, 'is-cyan')],
+      [5650, () => { terminalReveal?.classList.add('is-visible'); loader?.classList.add('is-revealing'); }],
+      [7100, completeLoader],
+  ];
+
+  sequence.forEach(([delay, callback]) => window.setTimeout(callback, delay));
+  introTimer = window.setTimeout(completeLoader, 7600);
+}
+
+function updateLoader(index) {
+  if (index >= initialFrameCount || loadedInitialFrames.has(index)) return;
+
+  loadedInitialFrames.add(index);
+  const progress = Math.round((loadedInitialFrames.size / initialFrameCount) * 100);
+  if (loaderPercent) loaderPercent.textContent = String(progress).padStart(2, '0');
+  if (loaderProgress) loaderProgress.style.transform = `scaleX(${progress / 100})`;
+  if (loaderCount) loaderCount.textContent = `${String(loadedInitialFrames.size).padStart(2, '0')} / ${initialFrameCount}`;
+  if (loaderStage && progress === 100) loaderStage.textContent = 'Experience ready';
+}
 
 function getBestAvailableFrame(frameNumber) {
   const preferredIndex = Math.round(frameNumber);
@@ -55,7 +140,11 @@ function loadFrame(index) {
 
   const image = new Image();
   image.decoding = 'async';
-  image.addEventListener('load', () => drawFrame(currentFrame), { once: true });
+  image.addEventListener('load', () => {
+    updateLoader(index);
+    drawFrame(currentFrame);
+  }, { once: true });
+  image.addEventListener('error', () => updateLoader(index), { once: true });
   image.src = `assets/frames-optimized/frame-${String(index + 1).padStart(3, '0')}.webp`;
   frames[index] = image;
 }
@@ -467,6 +556,8 @@ for (let index = 0; index < initialFrameCount; index += 1) loadFrame(index);
 nextFrameToLoad = initialFrameCount;
 queueBackgroundFrame();
 resizeCanvas();
+startSimulatedIntro();
+introSkip?.addEventListener('click', completeLoader);
 
 window.addEventListener('wheel', holdPageUntilVideoEnds, blockingOptions);
 window.addEventListener('touchstart', handleTouchStart, { passive: true });

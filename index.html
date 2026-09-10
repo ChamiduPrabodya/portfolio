@@ -14,7 +14,24 @@
     <link rel="stylesheet" href="work-motion.css" />
     <link rel="stylesheet" href="contact.css" />
   </head>
-  <body class="video-gate">
+  <body class="video-gate is-loading">
+    <div class="site-loader" role="status" aria-live="polite" aria-label="Simulated system introduction">
+      <div class="terminal-scanlines" aria-hidden="true"></div>
+      <button class="terminal-skip" type="button" data-intro-skip>Skip intro <span>→</span></button>
+      <div class="terminal-window">
+        <div class="terminal-topbar"><span>CP_SECURE_ENV / VISITOR_SESSION</span><i></i><i></i><i></i></div>
+        <div class="terminal-screen">
+          <p class="terminal-title" data-terminal-title>SYSTEM INITIALIZATION<span class="terminal-cursor">_</span></p>
+          <div class="terminal-lines" data-terminal-lines></div>
+          <div class="terminal-meter"><i data-terminal-meter></i></div>
+          <p class="terminal-status" data-terminal-status>Preparing digital environment</p>
+        </div>
+      </div>
+      <div class="terminal-reveal" data-terminal-reveal aria-hidden="true">
+        <span>Accessing portfolio...</span><strong>CHAMIDU<br /><em>PRABODYA</em></strong><p>Welcome, visitor. / Software engineer</p>
+      </div>
+      <p class="terminal-footer"><span>Simulated interface / no real system access</span><span><b data-loader-percent>00</b>%</span></p>
+    </div>
     <header class="site-header">
       <a class="logo" href="#top" aria-label="Chamidu Prabodya home">CP<span>.</span></a>
       <nav aria-label="Primary navigation">
