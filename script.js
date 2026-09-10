@@ -473,3 +473,10 @@ window.addEventListener('touchstart', handleTouchStart, { passive: true });
 window.addEventListener('touchmove', holdTouchScroll, blockingOptions);
 window.addEventListener('keydown', holdKeyboardScroll);
 window.addEventListener('resize', resizeCanvas);
+window.addEventListener('pageshow', () => {
+  window.requestAnimationFrame(() => {
+    resizeCanvas();
+    window.ScrollTrigger?.refresh();
+    window.ScrollTrigger?.update();
+  });
+});
