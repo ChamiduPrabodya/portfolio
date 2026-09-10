@@ -1,0 +1,11 @@
+/* Correct the three-part project metadata row. */
+.work-card-meta { grid-template-columns: 32px 1fr auto; }
+.work-card-meta > span:nth-child(2) { color: #c5c9c0; font-size: inherit; padding-left: .9rem; position: relative; }
+.work-card-meta > span:nth-child(2)::before { background: rgba(242,240,234,.62); content: ""; height: 1px; left: 0; position: absolute; top: 50%; width: .55rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .work-stack { height: auto; margin-left: auto; width: min(70vw, 980px); }
+  .work-stack-item { height: auto; margin-bottom: 2rem; position: relative; width: 100%; }
+  .work-card { min-height: 500px; }
+  .work-rail, .work-progress { display: none; }
+}
