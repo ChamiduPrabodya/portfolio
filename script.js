@@ -3,6 +3,7 @@ const context = canvas.getContext('2d');
 const body = document.body;
 const navigationLinks = [...document.querySelectorAll('nav a')];
 const navigableSections = [...document.querySelectorAll('main section[id]')];
+const backToTopButton = document.querySelector('.back-to-top');
 const frameCount = 120;
 const initialFrameCount = 24;
 const scrollSteps = 5;
@@ -40,6 +41,7 @@ function completeLoader() {
   if (isLoaderComplete) return;
 
   isLoaderComplete = true;
+  window.scrollTo(0, 0);
   loader?.classList.add('is-complete');
   body.classList.remove('is-loading');
   try {
@@ -264,6 +266,15 @@ const sectionObserver = new IntersectionObserver((entries) => {
 
 navigableSections.forEach((section) => sectionObserver.observe(section));
 
+function initializeBackToTopButton() {
+  if (!backToTopButton) return;
+
+  const toggleBackToTopButton = () => backToTopButton.classList.toggle('is-visible', window.scrollY > window.innerHeight * .65);
+  window.addEventListener('scroll', toggleBackToTopButton, { passive: true });
+  backToTopButton.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  toggleBackToTopButton();
+}
+
 function initializeSkillsScroll() {
   if (!window.gsap || !window.ScrollTrigger) return;
 
@@ -341,6 +352,7 @@ function initializeSkillsScroll() {
 }
 
 initializeSkillsScroll();
+initializeBackToTopButton();
 
 function initializeWorkScroll() {
   if (!window.gsap || !window.ScrollTrigger) return;
