@@ -167,6 +167,7 @@ function queueBackgroundFrame() {
 }
 
 function animateFrames() {
+  if (isHeroReleased) return;
   const difference = targetFrame - currentFrame;
 
   if (Math.abs(difference) > 0.1) {
@@ -228,12 +229,16 @@ function holdTouchScroll(event) {
 }
 
 function holdKeyboardScroll(event) {
+  if (event.target.closest('a, button, input, textarea, select, [contenteditable="true"]')) return;
+  if (!['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', ' ', 'Home', 'End'].includes(event.key)) return;
   if (['ArrowDown', 'PageDown', ' '].includes(event.key)) queueShowreelStep();
   event.preventDefault();
 }
 
-function unlockPortfolio() {
+function releaseHero() {
   isHeroReleased = true;
+  queuedSteps = 0;
+  isAdvancing = false;
   body.classList.remove('video-gate');
   window.removeEventListener('wheel', holdPageUntilVideoEnds, blockingOptions);
   window.removeEventListener('touchstart', handleTouchStart);
@@ -244,8 +249,42 @@ function unlockPortfolio() {
   const finalImage = getBestAvailableFrame(frameCount - 1);
   frames.length = 0;
   frames[frameCount - 1] = finalImage;
+}
+
+function unlockPortfolio() {
+  if (isHeroReleased) return;
+  releaseHero();
   window.requestAnimationFrame(() => {
     document.querySelector('#about').scrollIntoView({ behavior: 'smooth' });
+  });
+}
+
+function initializeSectionNavigation() {
+  document.querySelectorAll('a[href^="#"]').forEach((link) => {
+    const hash = link.getAttribute('href');
+    const section = navigableSections.find((item) => `#${item.id}` === hash);
+    if (!section) return;
+
+    link.addEventListener('click', (event) => {
+      if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
+      completeLoader();
+      if (loader) loader.hidden = true;
+      if (!isHeroReleased) releaseHero();
+      if (window.location.hash !== hash) window.history.pushState(null, '', hash);
+
+      window.requestAnimationFrame(() => {
+        window.ScrollTrigger?.refresh();
+        // Pinned sections move within their spacer; navigate to their original start.
+        const target = section.closest('.pin-spacer') || section;
+        const headerHeight = document.querySelector('.site-header').getBoundingClientRect().height;
+        const top = target.getBoundingClientRect().top + window.scrollY - headerHeight;
+        window.scrollTo({ top: Math.max(0, top), behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+        section.setAttribute('tabindex', '-1');
+        section.focus({ preventScroll: true });
+        setActiveNavigation(section.id);
+      });
+    });
   });
 }
 
@@ -356,6 +395,7 @@ function initializeSkillsScroll() {
 
 initializeSkillsScroll();
 initializeBackToTopButton();
+initializeSectionNavigation();
 
 function initializeWorkScroll() {
   if (!window.gsap || !window.ScrollTrigger) return;

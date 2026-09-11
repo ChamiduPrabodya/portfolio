@@ -1,7 +1,8 @@
 :root { --paper: #f2f0ea; --ink: #171916; --lime: #c3e146; --coral: #ff765c; --muted: #6c7068; }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-html { overflow-x: clip; scroll-behavior: smooth; }
+/* Navigation handles smooth scrolling; layout measurements must scroll immediately. */
+html { overflow-x: clip; }
 body { margin: 0; overflow-x: clip; background: var(--paper); color: var(--ink); font-family: "DM Sans", sans-serif; }
 body.video-gate { overflow: hidden; }
 html.section-entry .site-loader { display: none !important; }
