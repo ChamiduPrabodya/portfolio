@@ -1,6 +1,9 @@
 const canvas = document.querySelector('#hero-canvas');
 const context = canvas.getContext('2d');
 const body = document.body;
+const initialSection = /^#(about|skills|work|contact)$/.test(window.location.hash)
+  ? document.getElementById(window.location.hash.slice(1))
+  : null;
 const navigationLinks = [...document.querySelectorAll('nav a')];
 const navigableSections = [...document.querySelectorAll('main section[id]')];
 const backToTopButton = document.querySelector('.back-to-top');
@@ -520,7 +523,7 @@ function initializeContactAnimation() {
 
     gsap.to(serifLine, { yPercent: -8, ease: 'none', scrollTrigger: { trigger: section, start: 'top bottom', end: 'bottom top', scrub: true } });
     gsap.to(ghost, { xPercent: -5, yPercent: -7, ease: 'none', scrollTrigger: { trigger: section, start: 'top bottom', end: 'bottom top', scrub: true } });
-    if (footer) gsap.from(footer, { autoAlpha: 0, duration: .65, ease: 'power3.out', yPercent: 100, scrollTrigger: { trigger: footer, start: 'top 94%', once: true } });
+    if (footer) gsap.from(footer.querySelector('.footer-inner') || footer, { autoAlpha: 0, duration: .65, ease: 'power3.out', y: 24, scrollTrigger: { trigger: footer, start: 'top 94%', once: true } });
   }
 
   if (reducedMotion) return;
@@ -564,22 +567,43 @@ function initializeContactAnimation() {
 
 initializeContactAnimation();
 
-for (let index = 0; index < initialFrameCount; index += 1) loadFrame(index);
-nextFrameToLoad = initialFrameCount;
-queueBackgroundFrame();
-resizeCanvas();
-startSimulatedIntro();
-introSkip?.addEventListener('click', completeLoader);
+function scrollToInitialSection() {
+  if (!initialSection || window.location.hash !== `#${initialSection.id}`) return;
+  window.ScrollTrigger?.refresh();
+  initialSection.scrollIntoView({ behavior: 'instant', block: 'start' });
+  window.ScrollTrigger?.update();
+  setActiveNavigation(initialSection.id);
+}
 
-window.addEventListener('wheel', holdPageUntilVideoEnds, blockingOptions);
-window.addEventListener('touchstart', handleTouchStart, { passive: true });
-window.addEventListener('touchmove', holdTouchScroll, blockingOptions);
-window.addEventListener('keydown', holdKeyboardScroll);
+if (initialSection) {
+  isLoaderComplete = true;
+  isHeroReleased = true;
+  body.classList.remove('is-loading', 'video-gate');
+  if (loader) loader.hidden = true;
+  currentFrame = frameCount - 1;
+  targetFrame = currentFrame;
+  loadFrame(currentFrame);
+  window.requestAnimationFrame(scrollToInitialSection);
+} else {
+  for (let index = 0; index < initialFrameCount; index += 1) loadFrame(index);
+  nextFrameToLoad = initialFrameCount;
+  queueBackgroundFrame();
+  startSimulatedIntro();
+  introSkip?.addEventListener('click', completeLoader);
+
+  window.addEventListener('wheel', holdPageUntilVideoEnds, blockingOptions);
+  window.addEventListener('touchstart', handleTouchStart, { passive: true });
+  window.addEventListener('touchmove', holdTouchScroll, blockingOptions);
+  window.addEventListener('keydown', holdKeyboardScroll);
+}
+resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
-window.addEventListener('pageshow', () => {
+window.addEventListener('pageshow', async (event) => {
+  if (initialSection && !event.persisted) await document.fonts?.ready;
   window.requestAnimationFrame(() => {
     resizeCanvas();
     window.ScrollTrigger?.refresh();
+    if (!event.persisted) scrollToInitialSection();
     window.ScrollTrigger?.update();
   });
 });
