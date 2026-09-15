@@ -152,20 +152,32 @@ if (project) {
     return figure;
   }));
   const projectLinks = document.querySelector('.project-links');
-  const githubLink = document.createElement('a');
-  githubLink.href = project.github;
-  githubLink.target = '_blank';
-  githubLink.rel = 'noreferrer';
-  githubLink.textContent = 'View source ↗';
-  projectLinks.prepend(githubLink);
-  if (project.demo) {
-    const demoLink = document.createElement('a');
-    demoLink.href = project.demo;
-    demoLink.target = '_blank';
-    demoLink.rel = 'noreferrer';
-    demoLink.textContent = 'Live demo ↗';
-    projectLinks.append(demoLink);
-  }
+  const discussLink = projectLinks.querySelector('a');
+  discussLink.classList.add('project-discuss');
+  const createProjectButton = (url, label, variant, icon) => {
+    const link = document.createElement('a');
+    link.className = `project-button project-button--${variant}`;
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.setAttribute('aria-label', `${label}: ${plainTitle(project.title)} (opens in a new tab)`);
+    const symbol = document.createElement('span');
+    symbol.className = 'project-button-icon';
+    symbol.setAttribute('aria-hidden', 'true');
+    symbol.textContent = icon;
+    const text = document.createElement('span');
+    text.textContent = label;
+    const arrow = document.createElement('span');
+    arrow.className = 'project-button-arrow';
+    arrow.setAttribute('aria-hidden', 'true');
+    arrow.textContent = '↗';
+    link.append(symbol, text, arrow);
+    return link;
+  };
+  const actions = [];
+  if (project.demo) actions.push(createProjectButton(project.demo, 'Live demo', 'demo', '▶'));
+  if (project.github) actions.push(createProjectButton(project.github, 'Source code', 'source', '</>'));
+  projectLinks.prepend(...actions);
   const next = projects[project.next];
   const nextLink = document.querySelector('[data-next]');
   nextLink.href = `project-${project.next}.html`;
